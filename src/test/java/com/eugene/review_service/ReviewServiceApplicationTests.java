@@ -10,6 +10,7 @@ class ReviewServiceApplicationTests {
 
     @Test
     void contextLoads() {
+        // Nothing to do for now
     }
 
 }
