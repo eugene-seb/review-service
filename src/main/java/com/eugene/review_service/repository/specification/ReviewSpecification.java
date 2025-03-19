@@ -1,0 +1,39 @@
+package com.eugene.review_service.repository.specification;
+
+import com.eugene.review_service.dto.RatingDto;
+import com.eugene.review_service.model.Review;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ReviewSpecification {
+
+    private ReviewSpecification() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    public static Specification<Review> findReviewByUserAndBook(RatingDto ratingDto) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (ratingDto.userId() != null)
+                predicates.add(criteriaBuilder.equal(root.get("userId"), ratingDto.userId()));
+            if (ratingDto.bookId() != null)
+                predicates.add(criteriaBuilder.equal(root.get("bookId"), ratingDto.bookId()));
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    public static Specification<Review> findReviewsByBook(String bookId) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (bookId != null) predicates.add(criteriaBuilder.equal(root.get("bookId"), bookId));
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+}

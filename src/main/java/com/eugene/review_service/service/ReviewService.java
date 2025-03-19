@@ -1,14 +1,20 @@
 package com.eugene.review_service.service;
 
+import com.eugene.review_service.dto.RatingDto;
 import com.eugene.review_service.dto.ReviewDto;
 import com.eugene.review_service.feign.BookFeign;
 import com.eugene.review_service.feign.UserFeign;
 import com.eugene.review_service.model.Review;
 import com.eugene.review_service.repository.ReviewRepository;
+import com.eugene.review_service.repository.specification.ReviewSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReviewService {
@@ -16,22 +22,29 @@ public class ReviewService {
     private final UserFeign userFeign;
     private final BookFeign bookFeign;
 
-    public ReviewService(ReviewRepository reviewRepository, UserFeign userFeign, BookFeign bookFeign) {
+    public ReviewService(
+            ReviewRepository reviewRepository, UserFeign userFeign, BookFeign bookFeign) {
         this.reviewRepository = reviewRepository;
         this.userFeign = userFeign;
         this.bookFeign = bookFeign;
     }
 
-    public ResponseEntity<Review> createReview(ReviewDto reviewDto) {
+    public ResponseEntity<Review> createReview(ReviewDto reviewDto) throws URISyntaxException {
         Boolean userExists = userFeign
                 .isUserExist(reviewDto.userId())
                 .getBody();
         Boolean bookExists = bookFeign
                 .isBookExist(reviewDto.bookId())
                 .getBody();
+
         if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
-            Review review = new Review(reviewDto.rate(), reviewDto.comment(), reviewDto.userId(), reviewDto.bookId());
-            return ResponseEntity.ok(reviewRepository.save(review));
+            Review review = new Review(reviewDto.rating(), reviewDto.comment(), reviewDto.userId(),
+                    reviewDto.bookId());
+            Review reviewCreated = reviewRepository.save(review);
+
+            return ResponseEntity
+                    .created(new URI("/review?idReview=" + reviewCreated.getId()))
+                    .body(reviewCreated);
         } else {
             return ResponseEntity
                     .badRequest()
@@ -39,8 +52,9 @@ public class ReviewService {
         }
     }
 
-    public ResponseEntity<List<Review>> getAllReview() {
-        List<Review> reviews = reviewRepository.findAll();
+    public ResponseEntity<List<Review>> getReviewsByBook(String bookId) {
+        Specification<Review> reviewSpec = ReviewSpecification.findReviewsByBook(bookId);
+        List<Review> reviews = reviewRepository.findAll(reviewSpec);
         return ResponseEntity.ok(reviews);
     }
 
@@ -54,8 +68,31 @@ public class ReviewService {
                     .notFound()
                     .build();
         } else {
-            return ResponseEntity
-                    .ok(review);
+            return ResponseEntity.ok(review);
         }
+    }
+
+    public ResponseEntity<Review> updateRating(RatingDto ratingDto) {
+        Specification<Review> reviewSpec = ReviewSpecification.findReviewByUserAndBook(ratingDto);
+        Optional<Review> existingRatingOpt = reviewRepository.findOne(reviewSpec);
+
+        if (existingRatingOpt.isEmpty()) {
+            return ResponseEntity
+                    .notFound()
+                    .build();
+        }
+        Review reviewOld = existingRatingOpt.get();
+        reviewOld.setRating(ratingDto.ratingUpdated());
+
+        Review reviewUpdated = reviewRepository.save(reviewOld);
+
+        return ResponseEntity.ok(reviewUpdated);
+    }
+
+    public ResponseEntity<Review> deleteReview(Long idReview) {
+        reviewRepository.deleteById(idReview);
+        return ResponseEntity
+                .ok()
+                .build();
     }
 }

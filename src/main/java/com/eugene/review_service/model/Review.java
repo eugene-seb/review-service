@@ -10,7 +10,7 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int rate;
+    private int rating;
     private String comment;
 
     @Column(nullable = false, updatable = false)
@@ -26,7 +26,7 @@ public class Review {
     }
 
     public Review(int rate, String comment, String userId, String bookId) {
-        this.rate = rate;
+        this.rating = rate;
         this.comment = comment;
         this.userId = userId;
         this.bookId = bookId;
@@ -45,12 +45,12 @@ public class Review {
         this.id = id;
     }
 
-    public int getRate() {
-        return rate;
+    public int getRating() {
+        return rating;
     }
 
-    public void setRate(int rate) {
-        this.rate = rate;
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 
     public String getComment() {
