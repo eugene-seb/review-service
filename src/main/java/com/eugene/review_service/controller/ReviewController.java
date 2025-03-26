@@ -36,12 +36,12 @@ public class ReviewController {
     }
 
     @PutMapping("/update/rating")
-    public ResponseEntity<Review> updateRate(@RequestBody RatingDto ratingDto) {
+    public ResponseEntity<Review> updateRating(@RequestBody RatingDto ratingDto) {
         return reviewService.updateRating(ratingDto);
     }
 
     @DeleteMapping("delete/{reviewId}")
-    public ResponseEntity<Review> deleteReview(@PathVariable Long reviewId) {
+    public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
         return reviewService.deleteReview(reviewId);
     }
 }
