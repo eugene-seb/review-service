@@ -1,4 +1,4 @@
-package com.eugene.review_service.config;
+package com.eugene.review_service.kafka;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;

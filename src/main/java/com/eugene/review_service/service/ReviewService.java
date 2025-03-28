@@ -8,6 +8,7 @@ import com.eugene.review_service.kafka.ReviewEventProducer;
 import com.eugene.review_service.model.Review;
 import com.eugene.review_service.repository.ReviewRepository;
 import com.eugene.review_service.repository.specification.ReviewSpecification;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -48,10 +49,12 @@ public class ReviewService {
             Review review = new Review(reviewDto.rating(), reviewDto.comment(), reviewDto.userId(),
                     reviewDto.bookId());
             Review reviewCreated = reviewRepository.save(review);
-
-            reviewEventProducer.sendReviewsCreatedEvent(reviewDto.userId(), reviewDto.bookId(),
-                    Set.of(reviewCreated.getId()));
-
+            try {
+                reviewEventProducer.sendReviewsCreatedEvent(reviewDto.userId(), reviewDto.bookId(),
+                        Set.of(reviewCreated.getId()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e.getMessage(), e.getCause());
+            }
             return ResponseEntity
                     .created(new URI("/review?idReview=" + reviewCreated.getId()))
                     .body(reviewCreated);
@@ -105,7 +108,11 @@ public class ReviewService {
     @Transactional
     public ResponseEntity<Void> deleteReview(Long idReview) {
         reviewRepository.deleteById(idReview);
-        reviewEventProducer.sendReviewsDeletedEvent(Set.of(idReview));
+        try {
+            reviewEventProducer.sendReviewsDeletedEvent(Set.of(idReview));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getMessage(), e.getCause());
+        }
         return ResponseEntity
                 .ok()
                 .build();
