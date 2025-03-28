@@ -1,5 +1,6 @@
 package com.eugene.review_service.dto.event;
 
+import com.eugene.review_service.kafka.KafkaEventType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +17,8 @@ public class ReviewDtoEvent extends BaseDtoEvent {
     private String isbn;
     private Set<Long> reviewsIds;
 
-    public ReviewDtoEvent(String eventType, String username, String isbn, Set<Long> reviewsIds) {
+    public ReviewDtoEvent(
+            KafkaEventType eventType, String username, String isbn, Set<Long> reviewsIds) {
         super(eventType);
         this.username = username;
         this.isbn = isbn;

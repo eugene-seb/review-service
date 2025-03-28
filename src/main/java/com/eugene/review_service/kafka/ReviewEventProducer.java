@@ -21,13 +21,13 @@ public class ReviewEventProducer {
     public void sendReviewsCreatedEvent(String username, String isbn, Set<Long> reviewsIds) throws
             JsonProcessingException {
         String json = objectMapper.writeValueAsString(
-                new ReviewDtoEvent("REVIEWS_CREATED", username, isbn, reviewsIds));
+                new ReviewDtoEvent(KafkaEventType.REVIEWS_CREATED, username, isbn, reviewsIds));
         kafkaTemplate.send("review.events", json);
     }
 
     public void sendReviewsDeletedEvent(Set<Long> reviewsIds) throws JsonProcessingException {
         String json = objectMapper.writeValueAsString(
-                new ReviewDtoEvent("REVIEWS_DELETED", "", "", reviewsIds));
+                new ReviewDtoEvent(KafkaEventType.REVIEWS_DELETED, "", "", reviewsIds));
         kafkaTemplate.send("review.events", json);
     }
 }
