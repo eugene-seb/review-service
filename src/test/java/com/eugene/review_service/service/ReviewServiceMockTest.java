@@ -3,6 +3,7 @@ package com.eugene.review_service.service;
 import com.eugene.review_service.dto.RatingDto;
 import com.eugene.review_service.dto.ReviewDto;
 import com.eugene.review_service.model.Review;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -12,18 +13,15 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
-import java.util.Objects;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,6 +35,7 @@ class ReviewServiceMockTest {
     private final RatingDto ratingDto;
 
     /// I don't want the context to load kafka for this test, so I'm mocking his initialization
+    /// It will be used in each function of service that call Kafka producer/consumer
     @MockitoBean
     private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -48,6 +47,15 @@ class ReviewServiceMockTest {
     public ReviewServiceMockTest() {
         this.reviewDto = new ReviewDto("String comment", 4, "review1", "book4");
         this.ratingDto = new RatingDto(this.reviewDto.userId(), this.reviewDto.bookId(), 5);
+    }
+
+    private static String asJsonString(final Object obj) {
+        try {
+            final ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -62,44 +70,43 @@ class ReviewServiceMockTest {
 
     @Test
     @Order(2)
-    void getReviewsByBook() {
+    void getReviewsByBook() throws Exception {
 
-        List<Review> reviews = this.reviewServiceMock
-                .getReviewsByBook(this.reviewDto.bookId())
-                .getBody();
-
-        assertThat(reviews)
-                .isNotNull()
-                .hasSize(1);
+        mockMvc
+                .perform(get("/review/reviews/book/{bookId}", this.reviewDto.bookId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(1));
     }
 
     @Test
     @Order(3)
-    void getReviewById() {
-        ResponseEntity<Review> reviewResponseEntity = this.reviewServiceMock.getReviewById(1L);
+    void getReviewById() throws Exception {
 
-        assertThat(reviewResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(Objects
-                .requireNonNull(reviewResponseEntity.getBody())
-                .getComment()).isEqualTo(this.reviewDto.comment());
+        mockMvc
+                .perform(get("/review?idReview={idReview}", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comment").value(this.reviewDto.comment()));
     }
 
     @Test
     @Order(4)
-    void updateRating() {
-        ResponseEntity<Review> reviewResponseEntity = this.reviewServiceMock.updateRating(
-                this.ratingDto);
-        assertThat(reviewResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(Objects
-                .requireNonNull(reviewResponseEntity.getBody())
-                .getRating()).isEqualTo(this.ratingDto.ratingUpdated());
+    void updateRating() throws Exception {
+
+        mockMvc
+                .perform(put("/review/update/rating")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(ratingDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(ratingDto.ratingUpdated()));
     }
 
     @Test
     @Order(5)
     void deleteReview() throws Exception {
 
-        this.reviewServiceMock.deleteReview(1L);
+        mockMvc
+                .perform(delete("/review/delete/{idReview}", 1))
+                .andExpect(status().isOk());
 
         mockMvc
                 .perform(get("/review?idReview={idReview}", 1))
