@@ -2,7 +2,8 @@ package com.eugene.review_service.service;
 
 import com.eugene.review_service.dto.RatingDto;
 import com.eugene.review_service.dto.ReviewDto;
-import com.eugene.review_service.model.Review;
+import com.eugene.review_service.feign.BookFeign;
+import com.eugene.review_service.feign.UserFeign;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -14,12 +15,15 @@ import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,14 +42,16 @@ class ReviewServiceMockTest {
     /// It will be used in each function of service that call Kafka producer/consumer
     @MockitoBean
     private KafkaTemplate<String, String> kafkaTemplate;
+    @MockitoBean
+    private UserFeign userFeign;
+    @MockitoBean
+    private BookFeign bookFeign;
 
     @Autowired
     private MockMvc mockMvc;
-    @Autowired
-    private ReviewServiceMock reviewServiceMock;
 
     public ReviewServiceMockTest() {
-        this.reviewDto = new ReviewDto("String comment", 4, "review1", "book4");
+        this.reviewDto = new ReviewDto("String comment", 4, "user1", "book4");
         this.ratingDto = new RatingDto(this.reviewDto.userId(), this.reviewDto.bookId(), 5);
     }
 
@@ -61,11 +67,19 @@ class ReviewServiceMockTest {
     @Test
     @Order(1)
     void createReview() throws Exception {
-        Review review = this.reviewServiceMock
-                .createReview(reviewDto)
-                .getBody();
-        assertThat(review).isNotNull();
-        assertThat(review.getUserId()).isEqualTo(reviewDto.userId());
+
+        when(userFeign.isUserExist(anyString())).thenReturn(ResponseEntity.ok(true));
+        when(bookFeign.isBookExist(anyString())).thenReturn(ResponseEntity.ok(true));
+
+        mockMvc
+                .perform(post("/review/create_review")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(this.reviewDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.userId").value(this.reviewDto.userId()));
+
+        verify(userFeign).isUserExist(anyString());
+        verify(bookFeign).isBookExist(anyString());
     }
 
     @Test
