@@ -1,6 +1,5 @@
-package com.eugene.review_service.controllerTest;
+package com.eugene.review_service.controller;
 
-import com.eugene.review_service.controller.ReviewController;
 import com.eugene.review_service.model.Review;
 import com.eugene.review_service.service.ReviewService;
 import org.junit.jupiter.api.Test;
