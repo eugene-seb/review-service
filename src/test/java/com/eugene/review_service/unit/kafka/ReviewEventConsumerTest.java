@@ -1,7 +1,9 @@
-package com.eugene.review_service.kafka;
+package com.eugene.review_service.unit.kafka;
 
 import com.eugene.review_service.dto.event.BookDtoEvent;
 import com.eugene.review_service.dto.event.UserDtoEvent;
+import com.eugene.review_service.kafka.KafkaEventType;
+import com.eugene.review_service.kafka.ReviewEventConsumer;
 import com.eugene.review_service.repository.ReviewRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

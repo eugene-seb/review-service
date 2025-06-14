@@ -1,4 +1,4 @@
-package com.eugene.review_service.service;
+package com.eugene.review_service.functional;
 
 import com.eugene.review_service.dto.RatingDto;
 import com.eugene.review_service.dto.ReviewDto;
@@ -35,13 +35,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class ReviewServiceMockTest {
+class ReviewServiceFunctionalTest {
 
     private final ReviewDto reviewDto;
     private final RatingDto ratingDto;
 
     /// I don't want the context to load kafka for this test, so I'm mocking his initialization
-    /// It will be used in each function of service that call Kafka producer/consumer
+    /// It will replace all the KafkaTemplate instances.
     @MockitoBean
     private KafkaTemplate<String, String> kafkaTemplate;
     @MockitoBean
@@ -52,7 +52,7 @@ class ReviewServiceMockTest {
     @Autowired
     private MockMvc mockMvc;
 
-    public ReviewServiceMockTest() {
+    public ReviewServiceFunctionalTest() {
         this.reviewDto = new ReviewDto("String comment", 4, "user1", "book4");
         this.ratingDto = new RatingDto(this.reviewDto.userId(), this.reviewDto.bookId(), 5);
     }

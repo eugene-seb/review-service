@@ -1,5 +1,6 @@
-package com.eugene.review_service.controller;
+package com.eugene.review_service.unit.controller;
 
+import com.eugene.review_service.controller.ReviewController;
 import com.eugene.review_service.model.Review;
 import com.eugene.review_service.service.ReviewService;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 @WebMvcTest(ReviewController.class)
 @ActiveProfiles("test")
