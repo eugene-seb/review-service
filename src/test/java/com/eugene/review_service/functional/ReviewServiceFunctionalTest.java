@@ -53,7 +53,7 @@ class ReviewServiceFunctionalTest {
     private MockMvc mockMvc;
 
     public ReviewServiceFunctionalTest() {
-        this.reviewDto = new ReviewDto("String comment", 4, "user1", "book4");
+        this.reviewDto = new ReviewDto(4, "String comment", "user1", "book4");
         this.ratingDto = new RatingDto(this.reviewDto.userId(), this.reviewDto.bookId(), 5);
     }
 
