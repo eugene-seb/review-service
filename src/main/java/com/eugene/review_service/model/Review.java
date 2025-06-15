@@ -1,5 +1,6 @@
 package com.eugene.review_service.model;
 
+import com.eugene.review_service.dto.ReviewDetailsDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,11 @@ public class Review {
     @PrePersist
     protected void onCreate() {
         this.reviewDate = LocalDateTime.now();
+    }
+
+    public ReviewDetailsDto toReviewDetailsDto() {
+        return new ReviewDetailsDto(this.id, this.rating, this.comment, this.reviewDate,
+                this.userId, this.bookId);
     }
 
 }

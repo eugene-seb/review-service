@@ -1,7 +1,7 @@
 package com.eugene.review_service.unit.controller;
 
 import com.eugene.review_service.controller.ReviewController;
-import com.eugene.review_service.model.Review;
+import com.eugene.review_service.dto.ReviewDetailsDto;
 import com.eugene.review_service.service.ReviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
@@ -30,11 +31,9 @@ class ReviewControllerTest {
 
     @Test
     void getReviewsByBook() throws Exception {
-        List<Review> reviews = List.of(
-                new Review(4, "String comment", "String userId", "String bookId"));
-        reviews
-                .getFirst()
-                .setId(5L);
+        List<ReviewDetailsDto> reviews = List.of(
+                new ReviewDetailsDto(5L, 4, "String comment", LocalDateTime.now(), "String userId",
+                        "String bookId"));
 
         given(reviewService.getReviewsByBook("String bookId")).willReturn(
                 ResponseEntity.ok(reviews));
