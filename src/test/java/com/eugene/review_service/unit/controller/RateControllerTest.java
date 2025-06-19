@@ -1,8 +1,8 @@
 package com.eugene.review_service.unit.controller;
 
-import com.eugene.review_service.controller.ReviewController;
-import com.eugene.review_service.dto.ReviewDetailsDto;
-import com.eugene.review_service.service.ReviewService;
+import com.eugene.review_service.controller.RateController;
+import com.eugene.review_service.dto.RateDetailsDto;
+import com.eugene.review_service.service.RateService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,29 +20,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ReviewController.class)
+@WebMvcTest(RateController.class)
 @ActiveProfiles("test")
-class ReviewControllerTest {
+class RateControllerTest {
     @Autowired
     MockMvc mockMvc;
 
     @MockitoBean
-    ReviewService reviewService;
+    RateService rateService;
 
     @Test
-    void getReviewsByBook() throws Exception {
-        List<ReviewDetailsDto> reviews = List.of(
-                new ReviewDetailsDto(5L, 4, "String comment", LocalDateTime.now(), "String userId",
-                        "String bookId"));
+    void getRatesByBook() throws Exception {
+        List<RateDetailsDto> rates = List.of(new RateDetailsDto(5L, 4, LocalDateTime
+                .now()
+                .toString(), "String userId", "String bookId"));
 
-        given(reviewService.getReviewsByBook("String bookId")).willReturn(
-                ResponseEntity.ok(reviews));
+        given(rateService.getRatesByBook("String bookId")).willReturn(ResponseEntity.ok(rates));
 
         mockMvc
-                .perform(get("/review/reviews/book/{bookId}", "String bookId"))
+                .perform(get("/rate/rates/book/{bookId}", "String bookId"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(reviews.size()));
+                .andExpect(jsonPath("$.size()").value(rates.size()));
 
-        verify(reviewService).getReviewsByBook("String bookId");
+        verify(rateService).getRatesByBook("String bookId");
     }
 }

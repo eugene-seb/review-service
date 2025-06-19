@@ -2,7 +2,8 @@ package com.eugene.review_service.kafka;
 
 import com.eugene.review_service.dto.event.BookDtoEvent;
 import com.eugene.review_service.dto.event.UserDtoEvent;
-import com.eugene.review_service.repository.ReviewRepository;
+import com.eugene.review_service.repository.CommentRepository;
+import com.eugene.review_service.repository.RateRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -18,10 +19,12 @@ public class ReviewEventConsumer {
     private final Logger log = LoggerFactory.getLogger(ReviewEventConsumer.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ReviewRepository reviewRepository;
+    private final RateRepository rateRepository;
+    private final CommentRepository commentRepository;
 
-    public ReviewEventConsumer(ReviewRepository reviewRepository) {
-        this.reviewRepository = reviewRepository;
+    public ReviewEventConsumer(RateRepository rateRepository, CommentRepository commentRepository) {
+        this.rateRepository = rateRepository;
+        this.commentRepository = commentRepository;
     }
 
     @KafkaListener(topics = "user.events", groupId = "review-service-group")
@@ -41,7 +44,8 @@ public class ReviewEventConsumer {
     }
 
     private void deleteReviewsByIds(Set<Long> reviewsIds) {
-        reviewRepository.deleteAllById(reviewsIds);
+        this.rateRepository.deleteAllById(reviewsIds);
+        this.commentRepository.deleteAllById(reviewsIds);
         log.info("Reviews deleted");
     }
 }
