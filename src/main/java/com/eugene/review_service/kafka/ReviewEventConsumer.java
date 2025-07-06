@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -30,7 +31,7 @@ public class ReviewEventConsumer {
     @KafkaListener(topics = "user.events", groupId = "review-service-group")
     public void handleUserDeletedEvent(String json) throws JsonProcessingException {
         UserDtoEvent userDtoEvent = objectMapper.readValue(json, UserDtoEvent.class);
-        if (userDtoEvent.getEventType() == KafkaEventType.USER_DELETED) {
+        if (Objects.equals(userDtoEvent.getEventType(), KafkaEventType.USER_DELETED)) {
             deleteReviewsByIds(userDtoEvent.getReviewsIds());
         }
     }
@@ -38,7 +39,7 @@ public class ReviewEventConsumer {
     @KafkaListener(topics = "book.events", groupId = "review-service-group")
     public void handleBookDeletedEvent(String json) throws JsonProcessingException {
         BookDtoEvent bookDtoEvent = objectMapper.readValue(json, BookDtoEvent.class);
-        if (bookDtoEvent.getEventType() == KafkaEventType.BOOK_DELETED) {
+        if (Objects.equals(bookDtoEvent.getEventType(), KafkaEventType.BOOK_DELETED)) {
             deleteReviewsByIds(bookDtoEvent.getReviewsIds());
         }
     }
