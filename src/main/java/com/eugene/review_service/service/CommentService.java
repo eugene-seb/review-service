@@ -2,20 +2,17 @@ package com.eugene.review_service.service;
 
 import com.eugene.review_service.dto.CommentDetailsDto;
 import com.eugene.review_service.dto.CommentDto;
+import com.eugene.review_service.exception.NotFoundException;
 import com.eugene.review_service.feign.BookFeign;
 import com.eugene.review_service.feign.UserFeign;
 import com.eugene.review_service.kafka.ReviewEventProducer;
 import com.eugene.review_service.model.Comment;
 import com.eugene.review_service.repository.CommentRepository;
 import com.eugene.review_service.repository.specification.CommentSpecification;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 
@@ -35,9 +32,12 @@ public class CommentService {
         this.bookFeign = bookFeign;
     }
 
+    private static String getCommentNotFoundMessage(long idComment) {
+        return "Comment '" + idComment + "' not found.";
+    }
+
     @Transactional
-    public ResponseEntity<CommentDetailsDto> createComment(CommentDto commentDto) throws
-            URISyntaxException {
+    public CommentDetailsDto createComment(CommentDto commentDto) {
         Boolean userExists = userFeign
                 .isUserExist(commentDto.userId())
                 .getBody();
@@ -46,83 +46,56 @@ public class CommentService {
                 .getBody();
 
         if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
+
             Comment comment = commentDto.toComment();
             CommentDetailsDto commentCreated = commentRepository
                     .save(comment)
                     .toCommentDetailsDto();
-            try {
-                reviewEventProducer.sendReviewsCreatedEvent(commentDto.userId(),
-                        commentDto.bookId(), Set.of(commentCreated.id()));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e.getMessage(), e.getCause());
-            }
-            return ResponseEntity
-                    .created(new URI("/comment?idComment=" + commentCreated.id()))
-                    .body(commentCreated);
+
+            reviewEventProducer.sendReviewsCreatedEvent(commentDto.userId(), commentDto.bookId(),
+                    Set.of(commentCreated.id()));
+            return commentCreated;
         } else {
-            return ResponseEntity
-                    .badRequest()
-                    .build();
+            throw new NotFoundException("The user or book do not exist.", null);
         }
     }
 
     @Transactional
-    public ResponseEntity<List<CommentDetailsDto>> getCommentsByBook(String bookId) {
+    public List<CommentDetailsDto> getCommentsByBook(String bookId) {
         Specification<Comment> commentSpec = CommentSpecification.findCommentsByBook(bookId);
-        List<CommentDetailsDto> comments = commentRepository
+        return commentRepository
                 .findAll(commentSpec)
                 .stream()
                 .map(Comment::toCommentDetailsDto)
                 .toList();
-        return ResponseEntity.ok(comments);
     }
 
     @Transactional
-    public ResponseEntity<CommentDetailsDto> getCommentById(Long idComment) {
-        Comment comment = commentRepository
+    public CommentDetailsDto getCommentById(Long idComment) {
+        return commentRepository
                 .findById(idComment)
-                .orElse(null);
-
-        if (comment == null) {
-            return ResponseEntity
-                    .notFound()
-                    .build();
-        } else {
-            return ResponseEntity.ok(comment.toCommentDetailsDto());
-        }
+                .map(Comment::toCommentDetailsDto)
+                .orElseThrow(
+                        () -> new NotFoundException(getCommentNotFoundMessage(idComment), null));
     }
 
     @Transactional
-    public ResponseEntity<CommentDetailsDto> updateComment(CommentDetailsDto commentDetailsDto) {
+    public CommentDetailsDto updateComment(CommentDetailsDto commentDetailsDto) {
         Comment comment = commentRepository
                 .findById(commentDetailsDto.id())
-                .orElse(null);
+                .orElseThrow(() -> new NotFoundException(
+                        getCommentNotFoundMessage(commentDetailsDto.id()), null));
 
-        if (comment == null) {
-            return ResponseEntity
-                    .notFound()
-                    .build();
-        } else {
-            comment.setContent(commentDetailsDto.content());
+        comment.setContent(commentDetailsDto.content());
 
-            CommentDetailsDto reviewUpdated = commentRepository
-                    .save(comment)
-                    .toCommentDetailsDto();
-
-            return ResponseEntity.ok(reviewUpdated);
-        }
+        return commentRepository
+                .save(comment)
+                .toCommentDetailsDto();
     }
 
     @Transactional
-    public ResponseEntity<Void> deleteComment(Long idComment) {
+    public void deleteComment(Long idComment) {
         commentRepository.deleteById(idComment);
-        try {
-            reviewEventProducer.sendReviewsDeletedEvent(Set.of(idComment));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e.getMessage(), e.getCause());
-        }
-        return ResponseEntity
-                .ok()
-                .build();
+        reviewEventProducer.sendReviewsDeletedEvent(Set.of(idComment));
     }
 }

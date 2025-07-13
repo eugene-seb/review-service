@@ -6,6 +6,7 @@ import com.eugene.review_service.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -21,27 +22,36 @@ public class CommentController {
     @PostMapping("create_comment")
     public ResponseEntity<CommentDetailsDto> createComment(
             @RequestBody CommentDto commentDto) throws URISyntaxException {
-        return commentService.createComment(commentDto);
+
+        CommentDetailsDto commentDetailsDto = commentService.createComment(commentDto);
+
+        return ResponseEntity
+                .created(new URI("/comment?idComment=" + commentDetailsDto.id()))
+                .body(commentDetailsDto);
     }
 
     @GetMapping("comments/book/{bookId}")
     public ResponseEntity<List<CommentDetailsDto>> getCommentsByBook(@PathVariable String bookId) {
-        return commentService.getCommentsByBook(bookId);
+        return ResponseEntity.ok(commentService.getCommentsByBook(bookId));
     }
 
     @GetMapping
     public ResponseEntity<CommentDetailsDto> getCommentById(@RequestParam Long idComment) {
-        return commentService.getCommentById(idComment);
+        return ResponseEntity.ok(commentService.getCommentById(idComment));
     }
 
     @PutMapping("/update")
     public ResponseEntity<CommentDetailsDto> updateComment(
             @RequestBody CommentDetailsDto commentDetailsDto) {
-        return commentService.updateComment(commentDetailsDto);
+        return ResponseEntity.ok(commentService.updateComment(commentDetailsDto));
     }
 
     @DeleteMapping("delete/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
-        return commentService.deleteComment(commentId);
+        commentService.deleteComment(commentId);
+
+        return ResponseEntity
+                .ok()
+                .build();
     }
 }
