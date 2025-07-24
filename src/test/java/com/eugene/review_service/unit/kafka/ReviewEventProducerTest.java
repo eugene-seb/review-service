@@ -20,8 +20,8 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class ReviewEventProducerTest {
-
+class ReviewEventProducerTest
+{
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -33,12 +33,12 @@ class ReviewEventProducerTest {
 
         Set<Long> reviewsIds = Set.of(1L, 2L);
 
-        reviewEventProducer.sendReviewsCreatedEvent("username", "isbn", reviewsIds);
+        this.reviewEventProducer.sendReviewsCreatedEvent("username", "isbn", reviewsIds);
 
-        String json = objectMapper.writeValueAsString(
+        String json = this.objectMapper.writeValueAsString(
                 new ReviewDtoEvent(KafkaEventType.REVIEWS_CREATED, "username", "isbn", reviewsIds));
 
-        verify(kafkaTemplate, times(1)).send("review.events", json);
+        verify(this.kafkaTemplate, times(1)).send("review.events", json);
     }
 
     @Test
@@ -46,11 +46,11 @@ class ReviewEventProducerTest {
 
         Set<Long> reviewsIds = Set.of(1L, 2L);
 
-        reviewEventProducer.sendReviewsDeletedEvent(reviewsIds);
+        this.reviewEventProducer.sendReviewsDeletedEvent(reviewsIds);
 
-        String json = objectMapper.writeValueAsString(
+        String json = this.objectMapper.writeValueAsString(
                 new ReviewDtoEvent(KafkaEventType.REVIEWS_DELETED, "", "", reviewsIds));
 
-        verify(kafkaTemplate, times(1)).send("review.events", json);
+        verify(this.kafkaTemplate, times(1)).send("review.events", json);
     }
 }

@@ -11,19 +11,22 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
-public class Rate extends Review {
-
+public class Rate
+        extends Review
+{
     @Column(nullable = false, updatable = false)
     private int score;
 
-    public Rate(int score, String userId, String bookId) {
+    public Rate(
+            int score,
+            String userId,
+            String bookId
+    ) {
         super(userId, bookId);
         this.score = score;
     }
 
     public RateDetailsDto toRateDetailsDto() {
-        return new RateDetailsDto(this.id, this.score, this.reviewDate.toString(), this.userId,
-                this.bookId);
+        return new RateDetailsDto(this.id, this.score, this.reviewDate, this.userId, this.bookId);
     }
-
 }

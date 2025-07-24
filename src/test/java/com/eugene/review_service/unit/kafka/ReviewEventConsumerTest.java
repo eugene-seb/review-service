@@ -21,8 +21,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-class ReviewEventConsumerTest {
-
+class ReviewEventConsumerTest
+{
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
@@ -39,20 +39,18 @@ class ReviewEventConsumerTest {
         Set<Long> reviewIdsToDelete = Set.of(3L);
 
         UserDtoEvent userDtoEvent = new UserDtoEvent(KafkaEventType.BOOK_DELETED,
-                reviewIdsToDelete);
-        String json = objectMapper.writeValueAsString(userDtoEvent);
+                                                     reviewIdsToDelete);
+        String json = this.objectMapper.writeValueAsString(userDtoEvent);
 
-        doNothing()
-                .when(rateRepository)
-                .deleteAllById(reviewIdsToDelete);
-        doNothing()
-                .when(commentRepository)
-                .deleteAllById(reviewIdsToDelete);
+        doNothing().when(this.rateRepository)
+                   .deleteAllById(reviewIdsToDelete);
+        doNothing().when(this.commentRepository)
+                   .deleteAllById(reviewIdsToDelete);
 
-        reviewEventConsumer.handleBookDeletedEvent(json);
+        this.reviewEventConsumer.handleBookDeletedEvent(json);
 
-        verify(rateRepository, times(1)).deleteAllById(reviewIdsToDelete);
-        verify(commentRepository, times(1)).deleteAllById(reviewIdsToDelete);
+        verify(this.rateRepository, times(1)).deleteAllById(reviewIdsToDelete);
+        verify(this.commentRepository, times(1)).deleteAllById(reviewIdsToDelete);
     }
 
     @Test
@@ -61,19 +59,17 @@ class ReviewEventConsumerTest {
         Set<Long> reviewIdsToDelete = Set.of(3L);
 
         BookDtoEvent bookDtoEvent = new BookDtoEvent(KafkaEventType.BOOK_DELETED,
-                reviewIdsToDelete);
-        String json = objectMapper.writeValueAsString(bookDtoEvent);
+                                                     reviewIdsToDelete);
+        String json = this.objectMapper.writeValueAsString(bookDtoEvent);
 
-        doNothing()
-                .when(rateRepository)
-                .deleteAllById(reviewIdsToDelete);
-        doNothing()
-                .when(commentRepository)
-                .deleteAllById(reviewIdsToDelete);
+        doNothing().when(this.rateRepository)
+                   .deleteAllById(reviewIdsToDelete);
+        doNothing().when(this.commentRepository)
+                   .deleteAllById(reviewIdsToDelete);
 
-        reviewEventConsumer.handleBookDeletedEvent(json);
+        this.reviewEventConsumer.handleBookDeletedEvent(json);
 
-        verify(rateRepository, times(1)).deleteAllById(reviewIdsToDelete);
-        verify(commentRepository, times(1)).deleteAllById(reviewIdsToDelete);
+        verify(this.rateRepository, times(1)).deleteAllById(reviewIdsToDelete);
+        verify(this.commentRepository, times(1)).deleteAllById(reviewIdsToDelete);
     }
 }

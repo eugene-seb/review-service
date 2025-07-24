@@ -17,15 +17,19 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-public class RateService {
+public class RateService
+{
     private final ReviewEventProducer reviewEventProducer;
     private final RateRepository rateRepository;
     private final UserFeign userFeign;
     private final BookFeign bookFeign;
 
     public RateService(
-            ReviewEventProducer reviewEventProducer, RateRepository rateRepository,
-            UserFeign userFeign, BookFeign bookFeign) {
+            ReviewEventProducer reviewEventProducer,
+            RateRepository rateRepository,
+            UserFeign userFeign,
+            BookFeign bookFeign
+    ) {
         this.reviewEventProducer = reviewEventProducer;
         this.rateRepository = rateRepository;
         this.userFeign = userFeign;
@@ -34,31 +38,28 @@ public class RateService {
 
     @Transactional
     public RateDetailsDto createOrUpdateRate(RateDto rateDto) {
-        Boolean userExists = this.userFeign
-                .isUserExist(rateDto.userId())
-                .getBody();
-        Boolean bookExists = this.bookFeign
-                .isBookExist(rateDto.bookId())
-                .getBody();
+        Boolean userExists = this.userFeign.isUserExist(rateDto.getUserId())
+                                           .getBody();
+        Boolean bookExists = this.bookFeign.isBookExist(rateDto.getBookId())
+                                           .getBody();
 
         if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
 
-            Specification<Rate> rateSpec = RateSpecification.findRateByUserAndBook(rateDto.userId(),
-                    rateDto.bookId());
+            Specification<Rate> rateSpec = RateSpecification.findRateByUserAndBook(
+                    rateDto.getUserId(), rateDto.getBookId());
 
-            Rate rate = this.rateRepository
-                    .findOne(rateSpec)
-                    .orElse(new Rate());
-            rate.setScore(rateDto.score());
-            rate.setUserId(rateDto.userId());
-            rate.setBookId(rateDto.bookId());
+            Rate rate = this.rateRepository.findOne(rateSpec)
+                                           .orElse(new Rate());
+            rate.setScore(rateDto.getScore());
+            rate.setUserId(rateDto.getUserId());
+            rate.setBookId(rateDto.getBookId());
 
-            RateDetailsDto rateSaved = this.rateRepository
-                    .save(rate)
-                    .toRateDetailsDto();
+            RateDetailsDto rateSaved = this.rateRepository.save(rate)
+                                                          .toRateDetailsDto();
 
-            this.reviewEventProducer.sendReviewsCreatedEvent(rateDto.userId(), rateDto.bookId(),
-                    Set.of(rateSaved.id()));
+            this.reviewEventProducer.sendReviewsCreatedEvent(rateDto.getUserId(),
+                                                             rateDto.getBookId(),
+                                                             Set.of(rateSaved.getId()));
             return rateSaved;
         } else {
             throw new NotFoundException("The user or book do not exist.", null);
@@ -68,24 +69,23 @@ public class RateService {
     @Transactional
     public List<RateDetailsDto> getRatesByBook(String bookId) {
         Specification<Rate> rateSpec = RateSpecification.findRatesByBook(bookId);
-        return this.rateRepository
-                .findAll(rateSpec)
-                .stream()
-                .map(Rate::toRateDetailsDto)
-                .toList();
+        return this.rateRepository.findAll(rateSpec)
+                                  .stream()
+                                  .map(Rate::toRateDetailsDto)
+                                  .toList();
     }
 
     @Transactional
     public RateDetailsDto getRateById(Long idRate) {
-        return rateRepository
-                .findById(idRate)
-                .map(Rate::toRateDetailsDto)
-                .orElseThrow(() -> new NotFoundException("Rate '" + idRate + "' not found.", null));
+        return this.rateRepository.findById(idRate)
+                                  .map(Rate::toRateDetailsDto)
+                                  .orElseThrow(() -> new NotFoundException(
+                                          "Rate '" + idRate + "' not found.", null));
     }
 
     @Transactional
     public void deleteRate(Long idRate) {
-        rateRepository.deleteById(idRate);
-        reviewEventProducer.sendReviewsDeletedEvent(Set.of(idRate));
+        this.rateRepository.deleteById(idRate);
+        this.reviewEventProducer.sendReviewsDeletedEvent(Set.of(idRate));
     }
 }

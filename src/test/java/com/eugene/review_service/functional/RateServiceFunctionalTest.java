@@ -4,6 +4,7 @@ import com.eugene.review_service.dto.RateDto;
 import com.eugene.review_service.feign.BookFeign;
 import com.eugene.review_service.feign.UserFeign;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -34,12 +35,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class RateServiceFunctionalTest {
-
+class RateServiceFunctionalTest
+{
     private final RateDto rateDto;
 
-    /// I don't want the context to load kafka for this test, so I'm mocking his initialization
-    /// It will replace all the KafkaTemplate instances.
+    /**
+     * I don't want the context to load kafka for this test, so I'm mocking his initialization
+     * It will replace all the KafkaTemplate instances.
+     */
     @MockitoBean
     private KafkaTemplate<String, String> kafkaTemplate;
     @MockitoBean
@@ -57,6 +60,7 @@ class RateServiceFunctionalTest {
     private static String asJsonString(final Object obj) {
         try {
             final ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
             return mapper.writeValueAsString(obj);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -70,12 +74,11 @@ class RateServiceFunctionalTest {
         when(this.userFeign.isUserExist(anyString())).thenReturn(ResponseEntity.ok(true));
         when(this.bookFeign.isBookExist(anyString())).thenReturn(ResponseEntity.ok(true));
 
-        this.mockMvc
-                .perform(post("/rate/createorupdate_rate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(this.rateDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").value(this.rateDto.userId()));
+        this.mockMvc.perform(
+                    post("/rate/createorupdate_rate").contentType(MediaType.APPLICATION_JSON)
+                                                     .content(asJsonString(this.rateDto)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.userId").value(this.rateDto.getUserId()));
 
         verify(this.userFeign).isUserExist(anyString());
         verify(this.bookFeign).isBookExist(anyString());
@@ -85,32 +88,28 @@ class RateServiceFunctionalTest {
     @Order(2)
     void getRatesByBook() throws Exception {
 
-        this.mockMvc
-                .perform(get("/rate/rates/book/{bookId}", this.rateDto.bookId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+        this.mockMvc.perform(get("/rate/rates/book/{bookId}", this.rateDto.getBookId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(1));
     }
 
     @Test
     @Order(3)
     void getRateById() throws Exception {
 
-        this.mockMvc
-                .perform(get("/rate?idRate={idRate}", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.score").value(this.rateDto.score()));
+        this.mockMvc.perform(get("/rate?idRate={idRate}", 1))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.score").value(this.rateDto.getScore()));
     }
 
     @Test
     @Order(4)
     void deleteRate() throws Exception {
 
-        mockMvc
-                .perform(delete("/rate/delete/{idRate}", 1))
-                .andExpect(status().isOk());
+        this.mockMvc.perform(delete("/rate/delete/{idRate}", 1))
+                    .andExpect(status().isOk());
 
-        mockMvc
-                .perform(get("/rate?idRate={idRate}", 1))
-                .andExpect(status().isNotFound());
+        this.mockMvc.perform(get("/rate?idRate={idRate}", 1))
+                    .andExpect(status().isNotFound());
     }
 }

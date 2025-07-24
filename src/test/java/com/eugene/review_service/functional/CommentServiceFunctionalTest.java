@@ -5,6 +5,7 @@ import com.eugene.review_service.dto.CommentDto;
 import com.eugene.review_service.feign.BookFeign;
 import com.eugene.review_service.feign.UserFeign;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -37,13 +38,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class CommentServiceFunctionalTest {
-
+class CommentServiceFunctionalTest
+{
     private final CommentDto commentDto;
     private final CommentDetailsDto commentDetailsDto;
 
-    /// I don't want the context to load kafka for this test, so I'm mocking his initialization
-    /// It will replace all the KafkaTemplate instances.
+    /**
+     * I don't want the context to load kafka for this test, so I'm mocking his initialization
+     * It will replace all the KafkaTemplate instances.
+     */
     @MockitoBean
     private KafkaTemplate<String, String> kafkaTemplate;
     @MockitoBean
@@ -56,80 +59,78 @@ class CommentServiceFunctionalTest {
 
     public CommentServiceFunctionalTest() {
         this.commentDto = new CommentDto("String comment", "user1", "book4");
-        this.commentDetailsDto = new CommentDetailsDto(1L, "String comment", LocalDateTime
-                .now()
-                .toString(), "user1", "book4");
+        this.commentDetailsDto = new CommentDetailsDto(1L, "String comment", LocalDateTime.now(),
+                                                       "user1", "book4");
     }
 
     private static String asJsonString(final Object obj) {
         try {
             final ObjectMapper mapper = new ObjectMapper();
+            // Enable the support of LocalDateTime for JSON serialization/deserialization)
+            mapper.registerModule(new JavaTimeModule());
             return mapper.writeValueAsString(obj);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Autowired
+    public void configureObjectMapper(ObjectMapper objectMapper) {
+        objectMapper.registerModule(new JavaTimeModule());
+    }
+
     @Test
     @Order(1)
     void createComment() throws Exception {
 
-        when(userFeign.isUserExist(anyString())).thenReturn(ResponseEntity.ok(true));
-        when(bookFeign.isBookExist(anyString())).thenReturn(ResponseEntity.ok(true));
+        when(this.userFeign.isUserExist(anyString())).thenReturn(ResponseEntity.ok(true));
+        when(this.bookFeign.isBookExist(anyString())).thenReturn(ResponseEntity.ok(true));
 
-        mockMvc
-                .perform(post("/comment/create_comment")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(this.commentDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").value(this.commentDto.userId()));
+        this.mockMvc.perform(post("/comment/create_comment").contentType(MediaType.APPLICATION_JSON)
+                                                            .content(asJsonString(this.commentDto)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.userId").value(this.commentDto.getUserId()));
 
-        verify(userFeign).isUserExist(anyString());
-        verify(bookFeign).isBookExist(anyString());
+        verify(this.userFeign).isUserExist(anyString());
+        verify(this.bookFeign).isBookExist(anyString());
     }
 
     @Test
     @Order(2)
     void getCommentsByBook() throws Exception {
 
-        mockMvc
-                .perform(get("/comment/comments/book/{bookId}", this.commentDto.bookId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+        this.mockMvc.perform(get("/comment/comments/book/{bookId}", this.commentDto.getBookId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(1));
     }
 
     @Test
     @Order(3)
     void getCommentById() throws Exception {
 
-        mockMvc
-                .perform(get("/comment?idComment={idComment}", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value(this.commentDto.content()));
+        this.mockMvc.perform(get("/comment?idComment={idComment}", 1))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").value(this.commentDto.getContent()));
     }
 
     @Test
     @Order(4)
     void updateComment() throws Exception {
 
-        mockMvc
-                .perform(put("/comment/update")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(commentDetailsDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value(commentDetailsDto.content()));
+        this.mockMvc.perform(put("/comment/update").contentType(MediaType.APPLICATION_JSON)
+                                                   .content(asJsonString(this.commentDetailsDto)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").value(this.commentDetailsDto.getContent()));
     }
 
     @Test
     @Order(5)
     void deleteComment() throws Exception {
 
-        mockMvc
-                .perform(delete("/comment/delete/{idComment}", 1))
-                .andExpect(status().isOk());
+        this.mockMvc.perform(delete("/comment/delete/{idComment}", 1))
+                    .andExpect(status().isOk());
 
-        mockMvc
-                .perform(get("/comment?idComment={idComment}", 1))
-                .andExpect(status().isNotFound());
+        this.mockMvc.perform(get("/comment?idComment={idComment}", 1))
+                    .andExpect(status().isNotFound());
     }
 }

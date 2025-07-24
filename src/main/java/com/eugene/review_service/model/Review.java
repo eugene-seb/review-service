@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @NoArgsConstructor
-public class Review {
+public class Review
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
@@ -25,7 +26,10 @@ public class Review {
     @Column(nullable = false, updatable = false)
     protected String bookId;
 
-    public Review(String userId, String bookId) {
+    public Review(
+            String userId,
+            String bookId
+    ) {
         this.userId = userId;
         this.bookId = bookId;
     }

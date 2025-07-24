@@ -21,27 +21,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(CommentController.class)
 @ActiveProfiles("test")
-class CommentControllerTest {
+class CommentControllerTest
+{
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @MockitoBean
-    CommentService commentService;
+    private CommentService commentService;
 
     @Test
     void getCommentsByBook() throws Exception {
-        List<CommentDetailsDto> comments = List.of(new CommentDetailsDto(5L, "String comment",
-                LocalDateTime
-                        .now()
-                        .toString(), "String userId", "String bookId"));
+        List<CommentDetailsDto> comments = List.of(
+                new CommentDetailsDto(5L, "String comment", LocalDateTime.now(), "String userId",
+                                      "String bookId"));
 
-        given(commentService.getCommentsByBook("String bookId")).willReturn(comments);
+        given(this.commentService.getCommentsByBook("String bookId")).willReturn(comments);
 
-        mockMvc
-                .perform(get("/comment/comments/book/{bookId}", "String bookId"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(comments.size()));
+        this.mockMvc.perform(get("/comment/comments/book/{bookId}", "String bookId"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(comments.size()));
 
-        verify(commentService).getCommentsByBook("String bookId");
+        verify(this.commentService).getCommentsByBook("String bookId");
     }
 }

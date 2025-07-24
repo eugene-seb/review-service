@@ -11,19 +11,23 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
-public class Comment extends Review {
-
+public class Comment
+        extends Review
+{
     @Column(nullable = false, updatable = false)
     private String content;
 
-    public Comment(String content, String userId, String bookId) {
+    public Comment(
+            String content,
+            String userId,
+            String bookId
+    ) {
         super(userId, bookId);
         this.content = content;
     }
 
     public CommentDetailsDto toCommentDetailsDto() {
-        return new CommentDetailsDto(this.id, this.content, this.reviewDate.toString(), this.userId,
-                this.bookId);
+        return new CommentDetailsDto(this.id, this.content, this.reviewDate, this.userId,
+                                     this.bookId);
     }
-
 }

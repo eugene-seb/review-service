@@ -17,15 +17,19 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-public class CommentService {
+public class CommentService
+{
     private final ReviewEventProducer reviewEventProducer;
     private final CommentRepository commentRepository;
     private final UserFeign userFeign;
     private final BookFeign bookFeign;
 
     public CommentService(
-            ReviewEventProducer reviewEventProducer, CommentRepository commentRepository,
-            UserFeign userFeign, BookFeign bookFeign) {
+            ReviewEventProducer reviewEventProducer,
+            CommentRepository commentRepository,
+            UserFeign userFeign,
+            BookFeign bookFeign
+    ) {
         this.reviewEventProducer = reviewEventProducer;
         this.commentRepository = commentRepository;
         this.userFeign = userFeign;
@@ -38,22 +42,20 @@ public class CommentService {
 
     @Transactional
     public CommentDetailsDto createComment(CommentDto commentDto) {
-        Boolean userExists = userFeign
-                .isUserExist(commentDto.userId())
-                .getBody();
-        Boolean bookExists = bookFeign
-                .isBookExist(commentDto.bookId())
-                .getBody();
+        Boolean userExists = this.userFeign.isUserExist(commentDto.getUserId())
+                                           .getBody();
+        Boolean bookExists = this.bookFeign.isBookExist(commentDto.getBookId())
+                                           .getBody();
 
         if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
 
             Comment comment = commentDto.toComment();
-            CommentDetailsDto commentCreated = commentRepository
-                    .save(comment)
-                    .toCommentDetailsDto();
+            CommentDetailsDto commentCreated = this.commentRepository.save(comment)
+                                                                     .toCommentDetailsDto();
 
-            reviewEventProducer.sendReviewsCreatedEvent(commentDto.userId(), commentDto.bookId(),
-                    Set.of(commentCreated.id()));
+            this.reviewEventProducer.sendReviewsCreatedEvent(commentDto.getUserId(),
+                                                             commentDto.getBookId(),
+                                                             Set.of(commentCreated.getId()));
             return commentCreated;
         } else {
             throw new NotFoundException("The user or book do not exist.", null);
@@ -63,39 +65,36 @@ public class CommentService {
     @Transactional
     public List<CommentDetailsDto> getCommentsByBook(String bookId) {
         Specification<Comment> commentSpec = CommentSpecification.findCommentsByBook(bookId);
-        return commentRepository
-                .findAll(commentSpec)
-                .stream()
-                .map(Comment::toCommentDetailsDto)
-                .toList();
+        return this.commentRepository.findAll(commentSpec)
+                                     .stream()
+                                     .map(Comment::toCommentDetailsDto)
+                                     .toList();
     }
 
     @Transactional
     public CommentDetailsDto getCommentById(Long idComment) {
-        return commentRepository
-                .findById(idComment)
-                .map(Comment::toCommentDetailsDto)
-                .orElseThrow(
-                        () -> new NotFoundException(getCommentNotFoundMessage(idComment), null));
+        return this.commentRepository.findById(idComment)
+                                     .map(Comment::toCommentDetailsDto)
+                                     .orElseThrow(() -> new NotFoundException(
+                                             getCommentNotFoundMessage(idComment), null));
     }
 
     @Transactional
     public CommentDetailsDto updateComment(CommentDetailsDto commentDetailsDto) {
-        Comment comment = commentRepository
-                .findById(commentDetailsDto.id())
-                .orElseThrow(() -> new NotFoundException(
-                        getCommentNotFoundMessage(commentDetailsDto.id()), null));
+        Comment comment = this.commentRepository.findById(commentDetailsDto.getId())
+                                                .orElseThrow(() -> new NotFoundException(
+                                                        getCommentNotFoundMessage(
+                                                                commentDetailsDto.getId()), null));
 
-        comment.setContent(commentDetailsDto.content());
+        comment.setContent(commentDetailsDto.getContent());
 
-        return commentRepository
-                .save(comment)
-                .toCommentDetailsDto();
+        return this.commentRepository.save(comment)
+                                     .toCommentDetailsDto();
     }
 
     @Transactional
     public void deleteComment(Long idComment) {
-        commentRepository.deleteById(idComment);
-        reviewEventProducer.sendReviewsDeletedEvent(Set.of(idComment));
+        this.commentRepository.deleteById(idComment);
+        this.reviewEventProducer.sendReviewsDeletedEvent(Set.of(idComment));
     }
 }

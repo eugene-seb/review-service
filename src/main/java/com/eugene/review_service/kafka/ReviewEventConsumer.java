@@ -15,22 +15,25 @@ import java.util.Objects;
 import java.util.Set;
 
 @Service
-public class ReviewEventConsumer {
-
+public class ReviewEventConsumer
+{
     private final Logger log = LoggerFactory.getLogger(ReviewEventConsumer.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RateRepository rateRepository;
     private final CommentRepository commentRepository;
 
-    public ReviewEventConsumer(RateRepository rateRepository, CommentRepository commentRepository) {
+    public ReviewEventConsumer(
+            RateRepository rateRepository,
+            CommentRepository commentRepository
+    ) {
         this.rateRepository = rateRepository;
         this.commentRepository = commentRepository;
     }
 
     @KafkaListener(topics = "user.events", groupId = "review-service-group")
     public void handleUserDeletedEvent(String json) throws JsonProcessingException {
-        UserDtoEvent userDtoEvent = objectMapper.readValue(json, UserDtoEvent.class);
+        UserDtoEvent userDtoEvent = this.objectMapper.readValue(json, UserDtoEvent.class);
         if (Objects.equals(userDtoEvent.getEventType(), KafkaEventType.USER_DELETED)) {
             deleteReviewsByIds(userDtoEvent.getReviewsIds());
         }
@@ -38,7 +41,7 @@ public class ReviewEventConsumer {
 
     @KafkaListener(topics = "book.events", groupId = "review-service-group")
     public void handleBookDeletedEvent(String json) throws JsonProcessingException {
-        BookDtoEvent bookDtoEvent = objectMapper.readValue(json, BookDtoEvent.class);
+        BookDtoEvent bookDtoEvent = this.objectMapper.readValue(json, BookDtoEvent.class);
         if (Objects.equals(bookDtoEvent.getEventType(), KafkaEventType.BOOK_DELETED)) {
             deleteReviewsByIds(bookDtoEvent.getReviewsIds());
         }
@@ -47,6 +50,6 @@ public class ReviewEventConsumer {
     private void deleteReviewsByIds(Set<Long> reviewsIds) {
         this.rateRepository.deleteAllById(reviewsIds);
         this.commentRepository.deleteAllById(reviewsIds);
-        log.info("Reviews deleted");
+        this.log.info("Reviews deleted");
     }
 }

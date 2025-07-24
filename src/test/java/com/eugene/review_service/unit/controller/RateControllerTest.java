@@ -21,26 +21,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(RateController.class)
 @ActiveProfiles("test")
-class RateControllerTest {
+class RateControllerTest
+{
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @MockitoBean
-    RateService rateService;
+    private RateService rateService;
 
     @Test
     void getRatesByBook() throws Exception {
-        List<RateDetailsDto> rates = List.of(new RateDetailsDto(5L, 4, LocalDateTime
-                .now()
-                .toString(), "String userId", "String bookId"));
+        List<RateDetailsDto> rates = List.of(
+                new RateDetailsDto(5L, 4, LocalDateTime.now(), "String userId", "String bookId"));
 
-        given(rateService.getRatesByBook("String bookId")).willReturn(rates);
+        given(this.rateService.getRatesByBook("String bookId")).willReturn(rates);
 
-        mockMvc
-                .perform(get("/rate/rates/book/{bookId}", "String bookId"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(rates.size()));
+        this.mockMvc.perform(get("/rate/rates/book/{bookId}", "String bookId"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(rates.size()));
 
-        verify(rateService).getRatesByBook("String bookId");
+        verify(this.rateService).getRatesByBook("String bookId");
     }
 }

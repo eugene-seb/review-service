@@ -10,20 +10,28 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 
 @Service
-public class ReviewEventProducer {
-
+public class ReviewEventProducer
+{
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public ReviewEventProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    public ReviewEventProducer(
+            KafkaTemplate<String, String> kafkaTemplate,
+            ObjectMapper objectMapper
+    ) {
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
-    public void sendReviewsCreatedEvent(String username, String isbn, Set<Long> reviewsIds) {
+    public void sendReviewsCreatedEvent(
+            String username,
+            String isbn,
+            Set<Long> reviewsIds
+    ) {
         try {
-            String json = objectMapper.writeValueAsString(
+            String json = this.objectMapper.writeValueAsString(
                     new ReviewDtoEvent(KafkaEventType.REVIEWS_CREATED, username, isbn, reviewsIds));
-            kafkaTemplate.send("review.events", json);
+            this.kafkaTemplate.send("review.events", json);
         } catch (JsonProcessingException e) {
             throw new JsonException("Failed to serialize the list of IDs", e.getCause());
         }
@@ -31,9 +39,9 @@ public class ReviewEventProducer {
 
     public void sendReviewsDeletedEvent(Set<Long> reviewsIds) {
         try {
-            String json = objectMapper.writeValueAsString(
+            String json = this.objectMapper.writeValueAsString(
                     new ReviewDtoEvent(KafkaEventType.REVIEWS_DELETED, "", "", reviewsIds));
-            kafkaTemplate.send("review.events", json);
+            this.kafkaTemplate.send("review.events", json);
         } catch (JsonProcessingException e) {
             throw new JsonException("Failed to serialize the list of IDs", e.getCause());
         }
