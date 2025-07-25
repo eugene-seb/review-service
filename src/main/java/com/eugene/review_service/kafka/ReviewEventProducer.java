@@ -13,14 +13,12 @@ import java.util.Set;
 public class ReviewEventProducer
 {
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ReviewEventProducer(
-            KafkaTemplate<String, String> kafkaTemplate,
-            ObjectMapper objectMapper
+            KafkaTemplate<String, String> kafkaTemplate
     ) {
         this.kafkaTemplate = kafkaTemplate;
-        this.objectMapper = objectMapper;
     }
 
     public void sendReviewsCreatedEvent(
