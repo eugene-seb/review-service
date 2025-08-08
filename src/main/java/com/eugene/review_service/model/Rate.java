@@ -16,17 +16,22 @@ public class Rate
 {
     @Column(nullable = false, updatable = false)
     private int score;
-
+    
     public Rate(
             int score,
             String userId,
             String bookId
     ) {
-        super(userId, bookId);
+        super(userId,
+              bookId);
         this.score = score;
     }
-
+    
     public RateDetailsDto toRateDetailsDto() {
-        return new RateDetailsDto(this.id, this.score, this.reviewDate, this.userId, this.bookId);
+        return new RateDetailsDto(this.id,
+                                  this.score,
+                                  this.reviewDate,
+                                  this.userId,
+                                  this.bookId);
     }
 }

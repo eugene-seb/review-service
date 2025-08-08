@@ -16,18 +16,22 @@ public class Comment
 {
     @Column(nullable = false, updatable = false)
     private String content;
-
+    
     public Comment(
             String content,
             String userId,
             String bookId
     ) {
-        super(userId, bookId);
+        super(userId,
+              bookId);
         this.content = content;
     }
-
+    
     public CommentDetailsDto toCommentDetailsDto() {
-        return new CommentDetailsDto(this.id, this.content, this.reviewDate, this.userId,
+        return new CommentDetailsDto(this.id,
+                                     this.content,
+                                     this.reviewDate,
+                                     this.userId,
                                      this.bookId);
     }
 }
