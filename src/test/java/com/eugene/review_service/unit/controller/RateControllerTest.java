@@ -6,6 +6,7 @@ import com.eugene.review_service.service.RateService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,21 +26,27 @@ class RateControllerTest
 {
     @Autowired
     private MockMvc mockMvc;
-
+    
     @MockitoBean
     private RateService rateService;
-
+    
     @Test
+    @WithMockUser(roles = {"USER", "MODERATOR", "ADMIN"})
     void getRatesByBook() throws Exception {
-        List<RateDetailsDto> rates = List.of(
-                new RateDetailsDto(5L, 4, LocalDateTime.now(), "String userId", "String bookId"));
-
+        List<RateDetailsDto> rates = List.of(new RateDetailsDto(5L,
+                                                                4,
+                                                                LocalDateTime.now(),
+                                                                "String userId",
+                                                                "String bookId"));
+        
         given(this.rateService.getRatesByBook("String bookId")).willReturn(rates);
-
-        this.mockMvc.perform(get("/rate/rates/book/{bookId}", "String bookId"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.size()").value(rates.size()));
-
+        
+        this.mockMvc
+                .perform(get("/api/rate/book/{bookId}",
+                             "String bookId"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(rates.size()));
+        
         verify(this.rateService).getRatesByBook("String bookId");
     }
 }

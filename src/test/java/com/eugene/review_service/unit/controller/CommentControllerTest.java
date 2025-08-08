@@ -6,6 +6,7 @@ import com.eugene.review_service.service.CommentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,22 +26,27 @@ class CommentControllerTest
 {
     @Autowired
     private MockMvc mockMvc;
-
+    
     @MockitoBean
     private CommentService commentService;
-
+    
     @Test
+    @WithMockUser(roles = {"USER", "MODERATOR", "ADMIN"})
     void getCommentsByBook() throws Exception {
-        List<CommentDetailsDto> comments = List.of(
-                new CommentDetailsDto(5L, "String comment", LocalDateTime.now(), "String userId",
-                                      "String bookId"));
-
+        List<CommentDetailsDto> comments = List.of(new CommentDetailsDto(5L,
+                                                                         "String comment",
+                                                                         LocalDateTime.now(),
+                                                                         "String userId",
+                                                                         "String bookId"));
+        
         given(this.commentService.getCommentsByBook("String bookId")).willReturn(comments);
-
-        this.mockMvc.perform(get("/comment/comments/book/{bookId}", "String bookId"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.size()").value(comments.size()));
-
+        
+        this.mockMvc
+                .perform(get("/api/comment/book/{bookId}",
+                             "String bookId"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(comments.size()));
+        
         verify(this.commentService).getCommentsByBook("String bookId");
     }
 }

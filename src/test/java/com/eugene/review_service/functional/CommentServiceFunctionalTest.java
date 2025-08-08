@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -42,7 +43,7 @@ class CommentServiceFunctionalTest
 {
     private final CommentDto commentDto;
     private final CommentDetailsDto commentDetailsDto;
-
+    
     /**
      * I don't want the context to load kafka for this test, so I'm mocking his initialization
      * It will replace all the KafkaTemplate instances.
@@ -53,16 +54,21 @@ class CommentServiceFunctionalTest
     private UserFeign userFeign;
     @MockitoBean
     private BookFeign bookFeign;
-
+    
     @Autowired
     private MockMvc mockMvc;
-
+    
     public CommentServiceFunctionalTest() {
-        this.commentDto = new CommentDto("String comment", "user1", "book4");
-        this.commentDetailsDto = new CommentDetailsDto(1L, "String comment", LocalDateTime.now(),
-                                                       "user1", "book4");
+        this.commentDto = new CommentDto("String comment",
+                                         "user1",
+                                         "book4");
+        this.commentDetailsDto = new CommentDetailsDto(1L,
+                                                       "String comment",
+                                                       LocalDateTime.now(),
+                                                       "user1",
+                                                       "book4");
     }
-
+    
     private static String asJsonString(final Object obj) {
         try {
             final ObjectMapper mapper = new ObjectMapper();
@@ -73,64 +79,81 @@ class CommentServiceFunctionalTest
             throw new RuntimeException(e);
         }
     }
-
+    
     @Autowired
     public void configureObjectMapper(ObjectMapper objectMapper) {
         objectMapper.registerModule(new JavaTimeModule());
     }
-
+    
     @Test
     @Order(1)
+    @WithMockUser
     void createComment() throws Exception {
-
+        
         when(this.userFeign.isUserExist(anyString())).thenReturn(ResponseEntity.ok(true));
         when(this.bookFeign.isBookExist(anyString())).thenReturn(ResponseEntity.ok(true));
-
-        this.mockMvc.perform(post("/comment/create_comment").contentType(MediaType.APPLICATION_JSON)
-                                                            .content(asJsonString(this.commentDto)))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.userId").value(this.commentDto.getUserId()));
-
+        
+        this.mockMvc
+                .perform(post("/api/comment/create")
+                                 .contentType(MediaType.APPLICATION_JSON)
+                                 .content(asJsonString(this.commentDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.userId").value(this.commentDto.getUserId()));
+        
         verify(this.userFeign).isUserExist(anyString());
         verify(this.bookFeign).isBookExist(anyString());
     }
-
+    
     @Test
     @Order(2)
+    @WithMockUser
     void getCommentsByBook() throws Exception {
-
-        this.mockMvc.perform(get("/comment/comments/book/{bookId}", this.commentDto.getBookId()))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.size()").value(1));
+        
+        this.mockMvc
+                .perform(get("/api/comment/book/{bookId}",
+                             this.commentDto.getBookId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(1));
     }
-
+    
     @Test
     @Order(3)
+    @WithMockUser
     void getCommentById() throws Exception {
-
-        this.mockMvc.perform(get("/comment?idComment={idComment}", 1))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content").value(this.commentDto.getContent()));
+        
+        this.mockMvc
+                .perform(get("/api/comment/{idComment}",
+                             1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value(this.commentDto.getContent()));
     }
-
+    
     @Test
     @Order(4)
+    @WithMockUser
     void updateComment() throws Exception {
-
-        this.mockMvc.perform(put("/comment/update").contentType(MediaType.APPLICATION_JSON)
-                                                   .content(asJsonString(this.commentDetailsDto)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content").value(this.commentDetailsDto.getContent()));
+        
+        this.mockMvc
+                .perform(put("/api/comment/update")
+                                 .contentType(MediaType.APPLICATION_JSON)
+                                 .content(asJsonString(this.commentDetailsDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value(this.commentDetailsDto.getContent()));
     }
-
+    
     @Test
     @Order(5)
+    @WithMockUser
     void deleteComment() throws Exception {
-
-        this.mockMvc.perform(delete("/comment/delete/{idComment}", 1))
-                    .andExpect(status().isOk());
-
-        this.mockMvc.perform(get("/comment?idComment={idComment}", 1))
-                    .andExpect(status().isNotFound());
+        
+        this.mockMvc
+                .perform(delete("/api/comment/delete/{idComment}",
+                                1))
+                .andExpect(status().isOk());
+        
+        this.mockMvc
+                .perform(get("/api/comment/{idComment}",
+                             1))
+                .andExpect(status().isNotFound());
     }
 }
