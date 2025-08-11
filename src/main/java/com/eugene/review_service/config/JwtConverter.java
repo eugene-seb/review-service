@@ -30,7 +30,9 @@ public class JwtConverter
         
         Collection<GrantedAuthority> authorities = Stream
                 .concat(defaultAuthorities.stream(),
-                        extractKeycloakRoles(jwt).stream())
+                        extractKeycloakRoles(jwt)
+                                .stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role)))
                 .collect(Collectors.toSet());
         
         return new JwtAuthenticationToken(jwt,
@@ -45,14 +47,14 @@ public class JwtConverter
                 : jwt.getClaim(JwtClaimNames.SUB);
     }
     
-    private Collection<GrantedAuthority> extractKeycloakRoles(Jwt jwt) {
+    public Collection<String> extractKeycloakRoles(Jwt jwt) {
         Set<String> roles = new HashSet<>();
         roles.addAll(getRealmRoles(jwt));
         roles.addAll(getClientRoles(jwt));
         return roles
                 .stream()
                 .filter(Objects::nonNull)
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                .map(String::toUpperCase)
                 .collect(Collectors.toSet());
     }
     
