@@ -18,11 +18,11 @@ import java.util.Set;
 public class ReviewEventConsumer
 {
     private final Logger log = LoggerFactory.getLogger(ReviewEventConsumer.class);
-
+    
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RateRepository rateRepository;
     private final CommentRepository commentRepository;
-
+    
     public ReviewEventConsumer(
             RateRepository rateRepository,
             CommentRepository commentRepository
@@ -30,23 +30,27 @@ public class ReviewEventConsumer
         this.rateRepository = rateRepository;
         this.commentRepository = commentRepository;
     }
-
+    
     @KafkaListener(topics = "user.events", groupId = "review-service-group")
-    public void handleUserDeletedEvent(String json) throws JsonProcessingException {
-        UserDtoEvent userDtoEvent = this.objectMapper.readValue(json, UserDtoEvent.class);
-        if (Objects.equals(userDtoEvent.getEventType(), KafkaEventType.USER_DELETED)) {
+    public void handleUserEvent(String json) throws JsonProcessingException {
+        UserDtoEvent userDtoEvent = this.objectMapper.readValue(json,
+                                                                UserDtoEvent.class);
+        if (Objects.equals(userDtoEvent.getEventType(),
+                           KafkaEventType.USER_DELETED)) {
             deleteReviewsByIds(userDtoEvent.getReviewsIds());
         }
     }
-
+    
     @KafkaListener(topics = "book.events", groupId = "review-service-group")
-    public void handleBookDeletedEvent(String json) throws JsonProcessingException {
-        BookDtoEvent bookDtoEvent = this.objectMapper.readValue(json, BookDtoEvent.class);
-        if (Objects.equals(bookDtoEvent.getEventType(), KafkaEventType.BOOK_DELETED)) {
+    public void handleBookEvent(String json) throws JsonProcessingException {
+        BookDtoEvent bookDtoEvent = this.objectMapper.readValue(json,
+                                                                BookDtoEvent.class);
+        if (Objects.equals(bookDtoEvent.getEventType(),
+                           KafkaEventType.BOOK_DELETED)) {
             deleteReviewsByIds(bookDtoEvent.getReviewsIds());
         }
     }
-
+    
     private void deleteReviewsByIds(Set<Long> reviewsIds) {
         this.rateRepository.deleteAllById(reviewsIds);
         this.commentRepository.deleteAllById(reviewsIds);

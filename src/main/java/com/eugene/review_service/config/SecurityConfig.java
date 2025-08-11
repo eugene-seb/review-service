@@ -46,6 +46,11 @@ public class SecurityConfig
                         .requestMatchers("/api/comment/delete/**")
                         .authenticated()
                         
+                        .requestMatchers("/swagger-ui/**",
+                                         "/v3/api-docs/**",
+                                         "/swagger-ui/oauth2-redirect.html")
+                        .permitAll()
+                        
                         .anyRequest()
                         .authenticated())
                 

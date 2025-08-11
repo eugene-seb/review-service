@@ -24,52 +24,60 @@ import static org.mockito.Mockito.*;
 class ReviewEventConsumerTest
 {
     private final ObjectMapper objectMapper = new ObjectMapper();
-
+    
     @Mock
     private RateRepository rateRepository;
     @Mock
     private CommentRepository commentRepository;
-
+    
     @InjectMocks
     private ReviewEventConsumer reviewEventConsumer;
-
+    
     @Test
     void handleUserDeletedEvent() throws JsonProcessingException {
-
+        
         Set<Long> reviewIdsToDelete = Set.of(3L);
-
+        
         UserDtoEvent userDtoEvent = new UserDtoEvent(KafkaEventType.BOOK_DELETED,
                                                      reviewIdsToDelete);
         String json = this.objectMapper.writeValueAsString(userDtoEvent);
-
-        doNothing().when(this.rateRepository)
-                   .deleteAllById(reviewIdsToDelete);
-        doNothing().when(this.commentRepository)
-                   .deleteAllById(reviewIdsToDelete);
-
-        this.reviewEventConsumer.handleBookDeletedEvent(json);
-
-        verify(this.rateRepository, times(1)).deleteAllById(reviewIdsToDelete);
-        verify(this.commentRepository, times(1)).deleteAllById(reviewIdsToDelete);
+        
+        doNothing()
+                .when(this.rateRepository)
+                .deleteAllById(reviewIdsToDelete);
+        doNothing()
+                .when(this.commentRepository)
+                .deleteAllById(reviewIdsToDelete);
+        
+        this.reviewEventConsumer.handleBookEvent(json);
+        
+        verify(this.rateRepository,
+               times(1)).deleteAllById(reviewIdsToDelete);
+        verify(this.commentRepository,
+               times(1)).deleteAllById(reviewIdsToDelete);
     }
-
+    
     @Test
     void handleBookDeletedEvent() throws JsonProcessingException {
-
+        
         Set<Long> reviewIdsToDelete = Set.of(3L);
-
+        
         BookDtoEvent bookDtoEvent = new BookDtoEvent(KafkaEventType.BOOK_DELETED,
                                                      reviewIdsToDelete);
         String json = this.objectMapper.writeValueAsString(bookDtoEvent);
-
-        doNothing().when(this.rateRepository)
-                   .deleteAllById(reviewIdsToDelete);
-        doNothing().when(this.commentRepository)
-                   .deleteAllById(reviewIdsToDelete);
-
-        this.reviewEventConsumer.handleBookDeletedEvent(json);
-
-        verify(this.rateRepository, times(1)).deleteAllById(reviewIdsToDelete);
-        verify(this.commentRepository, times(1)).deleteAllById(reviewIdsToDelete);
+        
+        doNothing()
+                .when(this.rateRepository)
+                .deleteAllById(reviewIdsToDelete);
+        doNothing()
+                .when(this.commentRepository)
+                .deleteAllById(reviewIdsToDelete);
+        
+        this.reviewEventConsumer.handleBookEvent(json);
+        
+        verify(this.rateRepository,
+               times(1)).deleteAllById(reviewIdsToDelete);
+        verify(this.commentRepository,
+               times(1)).deleteAllById(reviewIdsToDelete);
     }
 }
