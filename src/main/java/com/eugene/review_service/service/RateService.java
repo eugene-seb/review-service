@@ -8,9 +8,7 @@ import com.eugene.review_service.feign.UserFeign;
 import com.eugene.review_service.kafka.ReviewEventProducer;
 import com.eugene.review_service.model.Rate;
 import com.eugene.review_service.repository.RateRepository;
-import com.eugene.review_service.repository.specification.RateSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,15 +35,14 @@ public class RateService
         
         if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
             
-            Specification<Rate> rateSpec = RateSpecification.findRateByUserAndBook(rateDto.getUserId(),
-                                                                                   rateDto.getBookId());
-            
             Rate rate = this.rateRepository
-                    .findOne(rateSpec)
-                    .orElse(new Rate());
+                    .findByUserIdAndBookId(rateDto.getUserId(),
+                                           rateDto.getBookId())
+                    .orElse(new Rate(rateDto.getScore(),
+                                     rateDto.getUserId(),
+                                     rateDto.getBookId()));
+            // Update score if rate already exists
             rate.setScore(rateDto.getScore());
-            rate.setUserId(rateDto.getUserId());
-            rate.setBookId(rateDto.getBookId());
             
             RateDetailsDto rateSaved = this.rateRepository
                     .save(rate)
@@ -63,9 +60,8 @@ public class RateService
     
     @Transactional(readOnly = true)
     public List<RateDetailsDto> getRatesByBook(String bookId) {
-        Specification<Rate> rateSpec = RateSpecification.findRatesByBook(bookId);
         return this.rateRepository
-                .findAll(rateSpec)
+                .findAllByBookId(bookId)
                 .stream()
                 .map(Rate::toRateDetailsDto)
                 .toList();

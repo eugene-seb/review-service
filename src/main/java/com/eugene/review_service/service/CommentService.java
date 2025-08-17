@@ -8,9 +8,7 @@ import com.eugene.review_service.feign.UserFeign;
 import com.eugene.review_service.kafka.ReviewEventProducer;
 import com.eugene.review_service.model.Comment;
 import com.eugene.review_service.repository.CommentRepository;
-import com.eugene.review_service.repository.specification.CommentSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,9 +56,8 @@ public class CommentService
     
     @Transactional
     public List<CommentDetailsDto> getCommentsByBook(String bookId) {
-        Specification<Comment> commentSpec = CommentSpecification.findCommentsByBook(bookId);
         return this.commentRepository
-                .findAll(commentSpec)
+                .findAllByBookId(bookId)
                 .stream()
                 .map(Comment::toCommentDetailsDto)
                 .toList();

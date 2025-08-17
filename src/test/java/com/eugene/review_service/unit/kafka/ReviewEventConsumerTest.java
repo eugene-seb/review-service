@@ -38,7 +38,7 @@ class ReviewEventConsumerTest
         
         Set<Long> reviewIdsToDelete = Set.of(3L);
         
-        UserDtoEvent userDtoEvent = new UserDtoEvent(KafkaEventType.BOOK_DELETED,
+        UserDtoEvent userDtoEvent = new UserDtoEvent(KafkaEventType.USER_DELETED,
                                                      reviewIdsToDelete);
         String json = this.objectMapper.writeValueAsString(userDtoEvent);
         
@@ -49,7 +49,7 @@ class ReviewEventConsumerTest
                 .when(this.commentRepository)
                 .deleteAllById(reviewIdsToDelete);
         
-        this.reviewEventConsumer.handleBookEvent(json);
+        this.reviewEventConsumer.handleUserEvent(json);
         
         verify(this.rateRepository,
                times(1)).deleteAllById(reviewIdsToDelete);
