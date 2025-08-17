@@ -11,16 +11,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig
 {
+    @Value("${keycloak.authorizationUrl}")
+    private String authorizationUrl;
     
-    @Value("${keycloak.url}")
-    private String keycloakBaseUrl;
+    @Value("${keycloak.tokenUrl}")
+    private String tokenUrl;
     
     @Bean
     public OpenAPI accessOpenAPI() {
         
         OAuthFlow authorizationCodeFlow = new OAuthFlow()
-                .authorizationUrl(keycloakBaseUrl + "/auth")
-                .tokenUrl(keycloakBaseUrl + "/token")
+                .authorizationUrl(this.authorizationUrl)
+                .tokenUrl(this.tokenUrl)
                 .scopes(new Scopes()
                                 .addString("openid",
                                            "OpenID scope")
