@@ -17,10 +17,14 @@ jobs:
     steps:
       - name: Enforce branch policy
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
+          # Block direct pushes to master
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo "❌ Direct push to master is not allowed!"
             exit 1
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          fi
+
+          # Enforce PRs to master must come from dev
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.base_ref }}" == "master" ]]; then
             if [[ "${{ github.head_ref }}" != "dev" ]]; then
               echo "❌ PRs to master must come from dev!"
               exit 1
