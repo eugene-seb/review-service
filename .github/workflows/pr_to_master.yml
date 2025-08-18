@@ -1,9 +1,6 @@
 # Execute only if it's a PR which comes from dev
 name: PR to master
 on:
-  push:
-    branches:
-      - master  # No push to master allowed, but I need to listen this event, so I can reject it
   pull_request:
     branches:
       - master  # I allow only PR from dev -> master
