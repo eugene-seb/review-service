@@ -15,22 +15,13 @@ jobs:
   validate-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Enforce branch policy
+      - name: Enforce PRs to master must come from dev
         run: |
-          # Block direct pushes to master
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo "❌ Direct push to master is not allowed!"
+          if [[ "${{ github.head_ref }}" != "dev" ]]; then
+            echo "❌ PRs to master must come from dev!"
             exit 1
-          fi
-
-          # Enforce PRs to master must come from dev
-          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.base_ref }}" == "master" ]]; then
-            if [[ "${{ github.head_ref }}" != "dev" ]]; then
-              echo "❌ PRs to master must come from dev!"
-              exit 1
-            else
-              echo "✅ PR from dev to master authorized."
-            fi
+          else
+            echo "✅ PR from dev to master authorized."
           fi
 
   #-----------------------------------------------------------------------
