@@ -27,7 +27,6 @@ jobs:
   test-service:
     runs-on: ubuntu-latest
     needs: validate-branch  # Only runs if validation passes
-    if: success()  # Ensures the first job succeeds
 
     steps:
       - name: Check out repository
