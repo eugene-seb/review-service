@@ -4,7 +4,6 @@ import com.eugene.review_service.dto.CommentDetailsDto;
 import com.eugene.review_service.dto.CommentDto;
 import com.eugene.review_service.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +23,7 @@ public class CommentController
     @Operation(summary = "Create a comment.")
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
-    public ResponseEntity<CommentDetailsDto> createComment(@Valid @RequestBody CommentDto commentDto)
+    public ResponseEntity<CommentDetailsDto> createComment(@RequestBody CommentDto commentDto)
             throws URISyntaxException {
         
         CommentDetailsDto commentDetailsDto = this.reviewEventProducer.createComment(commentDto);
@@ -51,7 +50,7 @@ public class CommentController
     @Operation(summary = "Update a comment.")
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/update")
-    public ResponseEntity<CommentDetailsDto> updateComment(@Valid @RequestBody CommentDetailsDto commentDetailsDto) {
+    public ResponseEntity<CommentDetailsDto> updateComment(@RequestBody CommentDetailsDto commentDetailsDto) {
         return ResponseEntity.ok(this.reviewEventProducer.updateComment(commentDetailsDto));
     }
     
