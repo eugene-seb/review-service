@@ -4,6 +4,7 @@ import com.eugene.review_service.dto.RateDetailsDto;
 import com.eugene.review_service.dto.RateDto;
 import com.eugene.review_service.service.RateService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ public class RateController
     @Operation(summary = "Create or update a rate.")
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/createorupdate")
-    public ResponseEntity<RateDetailsDto> createOrUpdateRate(@RequestBody RateDto rateDto)
+    public ResponseEntity<RateDetailsDto> createOrUpdateRate(@Valid @RequestBody RateDto rateDto)
             throws URISyntaxException {
         RateDetailsDto rateDetailsDto = this.rateService.createOrUpdateRate(rateDto);
         

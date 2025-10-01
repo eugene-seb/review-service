@@ -8,7 +8,6 @@ import com.eugene.review_service.feign.UserFeign;
 import com.eugene.review_service.kafka.ReviewEventProducer;
 import com.eugene.review_service.model.Comment;
 import com.eugene.review_service.repository.CommentRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ public class CommentService
     }
     
     @Transactional
-    public CommentDetailsDto createComment(@Valid CommentDto commentDto) {
+    public CommentDetailsDto createComment(CommentDto commentDto) {
         Boolean userExists = this.userFeign
                 .isUserExist(commentDto.getUserId())
                 .getBody();
@@ -74,7 +73,7 @@ public class CommentService
     }
     
     @Transactional
-    public CommentDetailsDto updateComment(@Valid CommentDetailsDto commentDetailsDto) {
+    public CommentDetailsDto updateComment(CommentDetailsDto commentDetailsDto) {
         Comment comment = this.commentRepository
                 .findById(commentDetailsDto.getId())
                 .orElseThrow(() -> new NotFoundException(getCommentNotFoundMessage(commentDetailsDto.getId()),

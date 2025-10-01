@@ -8,7 +8,6 @@ import com.eugene.review_service.feign.UserFeign;
 import com.eugene.review_service.kafka.ReviewEventProducer;
 import com.eugene.review_service.model.Rate;
 import com.eugene.review_service.repository.RateRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,7 @@ public class RateService
     private final BookFeign bookFeign;
     
     @Transactional
-    public RateDetailsDto createOrUpdateRate(@Valid RateDto rateDto) {
+    public RateDetailsDto createOrUpdateRate(RateDto rateDto) {
         Boolean userExists = this.userFeign
                 .isUserExist(rateDto.getUserId())
                 .getBody();
