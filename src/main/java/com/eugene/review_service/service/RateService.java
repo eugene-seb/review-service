@@ -33,7 +33,9 @@ public class RateService
                 .isBookExist(rateDto.getBookId())
                 .getBody();
         
-        if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
+        if (rateDto.getScore() > 5 || rateDto.getScore() < 0) {
+            throw new IllegalArgumentException("The score should be 0 < score < 6");
+        } else if (Boolean.TRUE.equals(userExists) && Boolean.TRUE.equals(bookExists)) {
             
             Rate rate = this.rateRepository
                     .findByUserIdAndBookId(rateDto.getUserId(),
@@ -78,7 +80,11 @@ public class RateService
     
     @Transactional
     public void deleteRate(Long idRate) {
-        this.rateRepository.deleteById(idRate);
-        this.reviewEventProducer.sendReviewsDeletedEvent(Set.of(idRate));
+        Rate rate = this.rateRepository
+                .findById(idRate)
+                .orElseThrow(() -> new NotFoundException("Rate '" + idRate + "' not found.",
+                                                         null));
+        this.rateRepository.delete(rate);
+        this.reviewEventProducer.sendReviewsDeletedEvent(Set.of(rate.getId()));
     }
 }

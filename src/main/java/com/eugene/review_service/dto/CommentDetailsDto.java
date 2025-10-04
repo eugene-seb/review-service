@@ -20,17 +20,17 @@ public class CommentDetailsDto
     @NotNull(message = "The ID is required.")
     @Positive(message = "The ID must be a positive value.")
     private Long id;
-
+    
     @NotBlank(message = "The content of a comment can't be blank.")
     @Size(min = 2, max = 500, message = "The content must be from 2 to 500 characters.")
     private String content;
-
-    @Past(message = "The date should be in the past.")
+    
+    @PastOrPresent(message = "The date should be in the past or present.")
     private LocalDateTime reviewDate;
-
+    
     @NotBlank(message = "The user ID is required.")
     private String userId;
-
+    
     @NotBlank(message = "The book ID is required.")
     private String bookId;
 }

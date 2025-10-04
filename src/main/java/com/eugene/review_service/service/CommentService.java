@@ -88,7 +88,11 @@ public class CommentService
     
     @Transactional
     public void deleteComment(Long idComment) {
-        this.commentRepository.deleteById(idComment);
-        this.reviewEventProducer.sendReviewsDeletedEvent(Set.of(idComment));
+        Comment comment = this.commentRepository
+                .findById(idComment)
+                .orElseThrow(() -> new NotFoundException(getCommentNotFoundMessage(idComment),
+                                                         null));
+        this.commentRepository.delete(comment);
+        this.reviewEventProducer.sendReviewsDeletedEvent(Set.of(comment.getId()));
     }
 }
